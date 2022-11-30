@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Game - Breakout 2D</title>
+</head>
+
+<body>
+<canvas></canvas>
+</body>
+
+<script type="module">
+  import * as app from "./app"
+
+  const game = new app.GameBreakout(
+    document.querySelector("canvas"),
+    {
+      brickRow: 2, FPS: -1
+    })
+  game.Start()
+</script>
+</html>
