@@ -15,9 +15,11 @@
   const game = new app.GameBreakout(
     document.querySelector("canvas"),
     {
+      // canvasWidth: 800,
+      // canvasHeight: 400,
       ballSpeed: 5,
-      brickColumn: 1,
-      brickRow: 1, FPS: -1
+      ballDy: -5,
+      // brickRow: 1, brickColumn: 1,
     })
   game.Start()
 </script>

@@ -15,8 +15,9 @@ abstract class Game {
     protected score: number
 
     protected constructor(canvas: HTMLCanvasElement, fps: number) {
-        canvas.width = window.innerWidth * 0.8
-        canvas.height = window.innerHeight * 0.8
+        // Let users set the size of the canvas by themselves.
+        // canvas.width = window.innerWidth * 0.8
+        // canvas.height = window.innerHeight * 0.8
         this.canvas = canvas
         this.ctx = canvas.getContext("2d") as CanvasRenderingContext2D
         this.isGameOver = false
@@ -160,7 +161,9 @@ export class GameBreakout extends Game {
 
     constructor(canvas: HTMLCanvasElement,
                 {
-                    FPS = 40,
+                    canvasWidth = 600,
+                    canvasHeight = 800,
+                    FPS = -1,
 
                     border = "1px solid #0ff",
                     lineWidth = 3,
@@ -177,7 +180,10 @@ export class GameBreakout extends Game {
                     brickColumn = 5,
                 },
     ) {
+        canvas.width = canvasWidth
+        canvas.height = canvasHeight
         super(canvas, FPS)
+
 
         this.level = 1
         this.#initImage()
@@ -219,7 +225,7 @@ export class GameBreakout extends Game {
         this.initControlKey()
 
         // Init Tray
-        const trayMarginBottom = this.cfg.TrayHeight * 5
+        const trayMarginBottom = this.cfg.TrayHeight * 3 // 太高沒有什麼意義，反正掉下去就是死掉
         {
             this.tray = new Tray(
                 this.canvas.width / 2 - this.cfg.TrayWidth / 2,
@@ -467,39 +473,38 @@ export class GameBreakout extends Game {
     }
 
 
+
     #checkLevelUp() {
-        let isLevelUp = true
-        let leaveFor = false
-        for (let r = 0; r < this.cfg.BrickRow; ++r) {
-            for (let c = 0; c < this.cfg.BrickColumn; ++c) {
-                if (this.bricks[r][c].isAlive) {
-                    isLevelUp = false
-                    leaveFor = true
-                    break
+        const isAllBroken = ()=>{
+            for (let r = 0; r < this.bricks.length; ++r) {
+                for (let c = 0; c < this.bricks[r].length; ++c) {
+                    if (this.bricks[r][c].isAlive) {
+                        return false
+                    }
                 }
             }
-            if (leaveFor) {
-                break
-            }
+            return true
         }
 
-        if (!isLevelUp) {
+        if (!isAllBroken()) {
             return
         }
 
         if (++this.level > this.cfg.MaxLevel) {
             this.isGameOver = true
+            return
         }
 
         this.ball.speed += 3
-        this.bricks = this.#createBricks(this.bricks.length+1, this.bricks[0].length)
+        this.bricks = this.#createBricks(this.bricks.length + 1, this.bricks[0].length)
         this.ball.DispatchEvent("reset")
     }
 
     #checkGameOver() {
-        if (!this.isGameOver) {
+        if (this.life > 0 && !this.isGameOver) {
             return
         }
+        this.isGameOver = true
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
         this.ctx.fillStyle = "#0e0e0e"
         this.ctx.font = `${this.#getCompatibleSize(5)}em System`
@@ -507,7 +512,6 @@ export class GameBreakout extends Game {
         this.life <= 0 ?
             this.ctx.fillText("YOU  LOSE", this.canvas.width * 0.2, this.canvas.height * 0.4) :
             this.ctx.fillText(" YOU WIN ", this.canvas.width * 0.2, this.canvas.height * 0.4);
-        return
     }
 
     // 物件邏輯判斷部分
