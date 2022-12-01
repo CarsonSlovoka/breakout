@@ -154,6 +154,7 @@ export class GameBreakout extends Game {
     protected bricks: Brick[][]
 
     life: number
+    level: number
 
     private lastTimeStamp = 0
 
@@ -178,6 +179,7 @@ export class GameBreakout extends Game {
     ) {
         super(canvas, FPS)
 
+        this.level = 1
         this.#initImage()
 
         const trayWidth = this.canvas.width * 0.1
@@ -298,31 +300,8 @@ export class GameBreakout extends Game {
         }
 
         // Init Bricks
-        {
-            this.bricks = []
-            for (let r = 0; r < this.cfg.BrickRow; ++r) {
-                this.bricks[r] = []
-                for (let c = 0; c < this.cfg.BrickColumn; ++c) {
-                    this.bricks[r][c] = new Brick(
-                        c * (this.cfg.BrickOffsetLeft + this.cfg.BrickWidth) + this.cfg.BrickOffsetLeft,
-                        r * (this.cfg.BrickOffsetTop + this.cfg.BrickHeight) + this.cfg.BrickOffsetTop + this.cfg.BrickMarginTop,
-                        this.cfg.BrickFillStyle,
-                        this.cfg.BrickStrokeStyle,
-                    )
-                    this.bricks[r][c].AddEventListener("draw", (e: Event) => {
-                        const curBrick = (e.target as any).object as Brick
-                        if (!curBrick.isAlive) {
-                            return
-                        }
-                        this.ctx.fillStyle = curBrick.fillStyle
-                        this.ctx.fillRect(curBrick.x, curBrick.y, this.cfg.BrickWidth, this.cfg.BrickHeight)
+        this.bricks = this.#createBricks(this.cfg.BrickRow, this.cfg.BrickColumn)
 
-                        this.ctx.strokeStyle = curBrick.strokeStyle
-                        this.ctx.strokeRect(curBrick.x, curBrick.y, this.cfg.BrickWidth, this.cfg.BrickHeight)
-                    })
-                }
-            }
-        }
 
         // 添加相依事件
         {
@@ -356,8 +335,8 @@ export class GameBreakout extends Game {
             })
 
             this.ball.AddEventListener("checkBrickCollision", () => {
-                for (let r = 0; r < this.cfg.BrickRow; ++r) {
-                    for (let c = 0; c < this.cfg.BrickColumn; ++c) {
+                for (let r = 0; r < this.bricks.length; ++r) {
+                    for (let c = 0; c < this.bricks[r].length; ++c) {
                         const curBrick = this.bricks[r][c]
                         if (!curBrick.isAlive) {
                             continue
@@ -386,6 +365,32 @@ export class GameBreakout extends Game {
         this.canvas.style.backgroundImage = img.BG.style.backgroundImage // "linear-gradient(6deg, #0ff .02%, rgb(0 157 245 / 20%) 99.98%)"
     }
 
+    #createBricks(numRow: number, numCol: number): Brick[][] {
+        const bricks: Brick[][] = []
+        for (let r = 0; r < numRow; ++r) {
+            bricks[r] = []
+            for (let c = 0; c < numCol; ++c) {
+                bricks[r][c] = new Brick(
+                    c * (this.cfg.BrickOffsetLeft + this.cfg.BrickWidth) + this.cfg.BrickOffsetLeft,
+                    r * (this.cfg.BrickOffsetTop + this.cfg.BrickHeight) + this.cfg.BrickOffsetTop + this.cfg.BrickMarginTop,
+                    this.cfg.BrickFillStyle,
+                    this.cfg.BrickStrokeStyle,
+                )
+                bricks[r][c].AddEventListener("draw", (e: Event) => {
+                    const curBrick = (e.target as any).object as Brick
+                    if (!curBrick.isAlive) {
+                        return
+                    }
+                    this.ctx.fillStyle = curBrick.fillStyle
+                    this.ctx.fillRect(curBrick.x, curBrick.y, this.cfg.BrickWidth, this.cfg.BrickHeight)
+
+                    this.ctx.strokeStyle = curBrick.strokeStyle
+                    this.ctx.strokeRect(curBrick.x, curBrick.y, this.cfg.BrickWidth, this.cfg.BrickHeight)
+                })
+            }
+        }
+        return bricks
+    }
 
     #drawTray() {
         this.ctx.fillStyle = this.tray.fillStyle
@@ -410,8 +415,8 @@ export class GameBreakout extends Game {
     }
 
     #drawBricks() {
-        for (let r = 0; r < this.cfg.BrickRow; ++r) {
-            for (let c = 0; c < this.cfg.BrickColumn; ++c) {
+        for (let r = 0; r < this.bricks.length; ++r) {
+            for (let c = 0; c < this.bricks[r].length; ++c) {
                 if (!this.bricks[r][c].isAlive) {
                     continue
                 }
@@ -420,15 +425,17 @@ export class GameBreakout extends Game {
         }
     }
 
-    #drawStats() {
+    #getCompatibleSize(defaultSize: number): number {
         // https://stackoverflow.com/a/22948632/9935654
         const defaultWidth = 1000
         const defaultHeight = 800
-        const defaultFontSize = 2
-        const defaultIconSize = 45
-        const ratio = this.canvas.width*this.canvas.height/(defaultWidth * defaultHeight)
-        const fontSize = defaultFontSize * ratio
-        const iconSize = defaultIconSize * ratio
+        const ratio = this.canvas.width * this.canvas.height / (defaultWidth * defaultHeight)
+        return defaultSize * ratio
+    }
+
+    #drawStats() {
+        const fontSize = this.#getCompatibleSize(2)
+        const iconSize = this.#getCompatibleSize(45)
 
         // https://www.w3schools.com/tags/canvas_textbaseline.asp
         this.ctx.textBaseline = "top"
@@ -436,7 +443,7 @@ export class GameBreakout extends Game {
         const marginTop = this.canvas.height * 0.01
         this.ctx.fillStyle = "#1fa7ff"
         this.ctx.font = `${fontSize}em System`
-        this.ctx.drawImage(img.Score, this.canvas.width*0.1, marginTop, iconSize, iconSize)
+        this.ctx.drawImage(img.Score, this.canvas.width * 0.1, marginTop, iconSize, iconSize)
         this.ctx.fillText(`${this.score}`, this.canvas.width * 0.16, marginTop)
 
         // put center
@@ -459,6 +466,50 @@ export class GameBreakout extends Game {
         this.#drawStats()
     }
 
+
+    #checkLevelUp() {
+        let isLevelUp = true
+        let leaveFor = false
+        for (let r = 0; r < this.cfg.BrickRow; ++r) {
+            for (let c = 0; c < this.cfg.BrickColumn; ++c) {
+                if (this.bricks[r][c].isAlive) {
+                    isLevelUp = false
+                    leaveFor = true
+                    break
+                }
+            }
+            if (leaveFor) {
+                break
+            }
+        }
+
+        if (!isLevelUp) {
+            return
+        }
+
+        if (++this.level > this.cfg.MaxLevel) {
+            this.isGameOver = true
+        }
+
+        this.ball.speed += 3
+        this.bricks = this.#createBricks(this.bricks.length+1, this.bricks[0].length)
+        this.ball.DispatchEvent("reset")
+    }
+
+    #checkGameOver() {
+        if (!this.isGameOver) {
+            return
+        }
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+        this.ctx.fillStyle = "#0e0e0e"
+        this.ctx.font = `${this.#getCompatibleSize(5)}em System`
+        this.ctx.fillText("GAME OVER", this.canvas.width * 0.2, this.canvas.height * 0.2)
+        this.life <= 0 ?
+            this.ctx.fillText("YOU  LOSE", this.canvas.width * 0.2, this.canvas.height * 0.4) :
+            this.ctx.fillText(" YOU WIN ", this.canvas.width * 0.2, this.canvas.height * 0.4);
+        return
+    }
+
     // 物件邏輯判斷部分
     protected Update() {
         this.tray.DispatchEvent("move")
@@ -468,6 +519,8 @@ export class GameBreakout extends Game {
         this.ball.DispatchEvent("checkWallCollision")
         this.ball.DispatchEvent("checkBrickCollision")
 
+        this.#checkLevelUp()
+        this.#checkGameOver()
     }
 
     protected Loop(timeStamp: DOMHighResTimeStamp) {
@@ -481,13 +534,9 @@ export class GameBreakout extends Game {
         }
         this.lastTimeStamp = timeStamp
 
-        if (!this.isPause) {
+        if (!this.isPause && !this.isGameOver) {
             this.Draw()
             this.Update()
-        }
-
-        if (this.isGameOver) {
-            return
         }
     }
 
