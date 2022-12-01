@@ -1,3 +1,5 @@
+import * as img from "./img.js"
+
 enum Direction {
     Null = "",
     Right = 'R',
@@ -175,6 +177,8 @@ export class GameBreakout extends Game {
                 },
     ) {
         super(canvas, FPS)
+
+        this.#initImage()
 
         const trayWidth = this.canvas.width * 0.1
         const trayHeight = this.canvas.height * 0.06
@@ -378,6 +382,11 @@ export class GameBreakout extends Game {
         }
     }
 
+    #initImage() {
+        this.canvas.style.backgroundImage = img.BG.style.backgroundImage // "linear-gradient(6deg, #0ff .02%, rgb(0 157 245 / 20%) 99.98%)"
+    }
+
+
     #drawTray() {
         this.ctx.fillStyle = this.tray.fillStyle
         this.ctx.fillRect(this.tray.x, this.tray.y, this.tray.width, this.tray.height)
@@ -413,20 +422,37 @@ export class GameBreakout extends Game {
 
     #drawStats() {
         // https://stackoverflow.com/a/22948632/9935654
-        const fontBase = 1000 // 在畫面寬度為1000的時候
-        const fontSize = 2 // 則想要的字體大小為
-        const ratio = fontSize / fontBase
+        const defaultWidth = 1000
+        const defaultHeight = 800
+        const defaultFontSize = 2
+        const defaultIconSize = 45
+        const ratio = this.canvas.width*this.canvas.height/(defaultWidth * defaultHeight)
+        const fontSize = defaultFontSize * ratio
+        const iconSize = defaultIconSize * ratio
+
+        // https://www.w3schools.com/tags/canvas_textbaseline.asp
+        this.ctx.textBaseline = "top"
+
+        const marginTop = this.canvas.height * 0.01
         this.ctx.fillStyle = "#1fa7ff"
-        this.ctx.font = `${this.canvas.width * ratio}em System`
-        this.ctx.fillText(`SCORE: ${this.score}`, this.canvas.width * 0.03, this.cfg.BrickMarginTop) // put left
-        this.ctx.fillText(`LIFE: ${this.life}`, this.canvas.width * 0.85, this.cfg.BrickMarginTop) // put right
-        this.ctx.fillText(`LEVEL:`, this.canvas.width * 0.36, this.cfg.BrickMarginTop) // put center
+        this.ctx.font = `${fontSize}em System`
+        this.ctx.drawImage(img.Score, this.canvas.width*0.1, marginTop, iconSize, iconSize)
+        this.ctx.fillText(`${this.score}`, this.canvas.width * 0.16, marginTop)
+
+        // put center
+        this.ctx.drawImage(img.Life, this.canvas.width * 0.44, marginTop, iconSize, iconSize)
+        this.ctx.fillText(`${this.life}`, this.canvas.width * 0.50, marginTop)
+
+        // put right
+        this.ctx.drawImage(img.Level, this.canvas.width * 0.80, marginTop, iconSize, iconSize)
+        this.ctx.fillText(`1`, this.canvas.width * 0.86, marginTop)
     }
 
     // 畫出物件
     protected Draw() {
-        this.ctx.fillStyle = "#dedcdc" // clear the canvas
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+        // this.ctx.fillStyle = "#dedcdc" // clear the canvas
+        // this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
         this.#drawTray()
         this.#drawBall()
         this.#drawBricks()
