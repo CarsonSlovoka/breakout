@@ -5,7 +5,8 @@
   "main": "test.js",
   "type": "module",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "buildMinJS": "rollup -c && uglifyjs ../docs/app/bundle.js -m -c -o ../docs/app/game.min.js"
   },
   "author": "Carson",
   "license": "MIT",
