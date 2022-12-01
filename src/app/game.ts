@@ -184,7 +184,6 @@ export class GameBreakout extends Game {
         canvas.height = canvasHeight
         super(canvas, FPS)
 
-
         this.level = 1
         this.#initImage()
 
@@ -365,6 +364,9 @@ export class GameBreakout extends Game {
                 }
             })
         }
+
+        this.isPause = true
+        this.#showControlMenu()
     }
 
     #initImage() {
@@ -472,8 +474,6 @@ export class GameBreakout extends Game {
         this.#drawStats()
     }
 
-
-
     #checkLevelUp() {
         const isAllBroken = ()=>{
             for (let r = 0; r < this.bricks.length; ++r) {
@@ -512,6 +512,14 @@ export class GameBreakout extends Game {
         this.life <= 0 ?
             this.ctx.fillText("YOU  LOSE", this.canvas.width * 0.2, this.canvas.height * 0.4) :
             this.ctx.fillText(" YOU WIN ", this.canvas.width * 0.2, this.canvas.height * 0.4);
+    }
+
+    #showControlMenu() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+        this.ctx.fillStyle = "#0e0e0e"
+        this.ctx.font = `${this.#getCompatibleSize(2)}em System`
+        this.ctx.fillText("Escape: Pause", this.canvas.width * 0.2, this.canvas.height * 0.2)
+        this.ctx.fillText("Move: ← →", this.canvas.width * 0.2, this.canvas.height * 0.4)
     }
 
     // 物件邏輯判斷部分
@@ -553,10 +561,15 @@ export class GameBreakout extends Game {
             switch (keyboardEvent.key) {
                 case "ArrowRight":
                     this.tray.moveDirection = Direction.Right
+                    this.isPause = false
                     break
                 case "ArrowLeft":
                     this.tray.moveDirection = Direction.Left
+                    this.isPause = false
                     break
+                case "Escape":
+                    this.isPause = true
+                    this.#showControlMenu()
             }
         })
         this.canvas.addEventListener("keyup", (event) => {
@@ -566,9 +579,5 @@ export class GameBreakout extends Game {
 
     Start() {
         this.Loop(0)
-    }
-
-    Paused() {
-        this.isPause = !this.isPause
     }
 }
