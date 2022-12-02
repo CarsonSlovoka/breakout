@@ -5,7 +5,7 @@ export let Level: SafeImage
 
 class SafeImage extends Image {
     static async New(src: string, defaultDataURI: string, width?: number, height?: number): Promise<SafeImage> {
-        const srcURL = await fetch(src, {method: "HEAD"})
+        const srcURL = await fetch(src)
             .then((res: Response) => {
                 if (res.status != 200) {
                     console.warn(`${src} was not found. Use defaultDataURI instead.`)

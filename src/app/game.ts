@@ -158,6 +158,8 @@ export class GameBreakout extends Game {
     life: number
     level: number
 
+    mouse: { x: number, y: number }
+
     private lastTimeStamp = 0
 
     constructor(canvas: HTMLCanvasElement,
@@ -222,7 +224,8 @@ export class GameBreakout extends Game {
         }
         this.life = this.cfg.Life
 
-        this.initControlKey()
+        this.mouse = {x: 0, y: 0}
+        this.initControl()
 
         // Init Tray
         const trayMarginBottom = this.cfg.TrayHeight * 3 // 太高沒有什麼意義，反正掉下去就是死掉
@@ -423,6 +426,25 @@ export class GameBreakout extends Game {
         this.ctx.closePath()
     }
 
+    #drawMouse() {
+        if (this.mouse.x === 0 && this.mouse.y === 0) {
+            return
+        }
+        this.ctx.beginPath()
+
+        this.ctx.globalAlpha = 0.2
+        this.ctx.arc(this.mouse.x, this.mouse.y, 5, 0, 2 * Math.PI)
+
+        this.ctx.fillStyle = "#ff0000"
+        this.ctx.fill()
+
+        this.ctx.strokeStyle = "#000000"
+        this.ctx.stroke()
+
+        this.ctx.closePath()
+        this.ctx.globalAlpha = 1
+    }
+
     #drawBricks() {
         for (let r = 0; r < this.bricks.length; ++r) {
             for (let c = 0; c < this.bricks[r].length; ++c) {
@@ -473,10 +495,11 @@ export class GameBreakout extends Game {
         this.#drawBall()
         this.#drawBricks()
         this.#drawStats()
+        this.#drawMouse()
     }
 
     #checkLevelUp() {
-        const isAllBroken = ()=>{
+        const isAllBroken = () => {
             for (let r = 0; r < this.bricks.length; ++r) {
                 for (let c = 0; c < this.bricks[r].length; ++c) {
                     if (this.bricks[r][c].isAlive) {
@@ -553,6 +576,22 @@ export class GameBreakout extends Game {
         if (!this.isPause && !this.isGameOver) {
             this.Draw()
             this.Update()
+        }
+    }
+
+    initControl() {
+        this.initControlKey()
+        // Mouse
+        {
+            this.canvas.addEventListener("mousemove", (e) => {
+                this.mouse.x = e.clientX - this.canvas.offsetLeft
+                this.mouse.y = e.clientY - this.canvas.offsetTop
+            })
+
+            this.canvas.addEventListener("mouseleave", () => {
+                this.mouse.x = 0
+                this.mouse.y = 0
+            })
         }
     }
 

@@ -6,7 +6,7 @@ export let Win: SafeAudio
 
 class SafeAudio extends Audio {
     static async New(src: string): Promise<SafeAudio> {
-        const srcURL = await fetch(src, {method: "HEAD"})
+        const srcURL = await fetch(src) // method: HEAD會得到: fetch failed loading head
             .then((res: Response) => {
                 // 如果fetch的內容不在，會自己顯示err訊息到console，不需要再自己處理
                 if (res.status != 200) {
