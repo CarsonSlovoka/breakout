@@ -1,4 +1,5 @@
 import * as img from "./img.js"
+import * as audio from "./audio.js"
 
 enum Direction {
     Null = "",
@@ -283,21 +284,21 @@ export class GameBreakout extends Game {
                     ball.x - ball.radius < 0 // left wall
                 ) {
                     ball.dx *= -1
-                    // WALL_HIT.play()
+                    audio.WallHit.Play()
                     return
                 }
 
                 // top wall
                 if (ball.y - ball.radius < 0) {
                     ball.dy *= -1
-                    // AUDIO.WallHit.play()
+                    audio.WallHit.Play()
                     return
                 }
 
                 // bottom
                 if (ball.y + ball.radius > this.canvas.height) {
                     --this.life
-                    // AUDIO.LifeLost.play()
+                    audio.LifeLost.Play()
                     ball.DispatchEvent("reset")
                     return
                 }
@@ -317,7 +318,7 @@ export class GameBreakout extends Game {
                     this.ball.y + this.ball.radius /* bottom */ >= this.tray.y && // 注意y方向往下才是為正
                     this.ball.y + this.ball.radius <= this.tray.y + this.tray.height
                 ) {
-                    // Audio.TrayHit.play()
+                    audio.TrayHit.Play()
 
                     // 當球擊中托盤位置位於托盤中心:
                     // 左側: 負
@@ -355,7 +356,7 @@ export class GameBreakout extends Game {
                             this.ball.y - this.ball.radius <= curBrick.y + this.cfg.BrickHeight &&
                             this.ball.y + this.ball.radius >= curBrick.y
                         ) {
-                            // Audio.BrickHit.play()
+                            audio.BrickHit.Play()
                             this.ball.dy *= -1
                             curBrick.isAlive = false
                             this.score += this.cfg.ScoreUnit
@@ -509,9 +510,12 @@ export class GameBreakout extends Game {
         this.ctx.fillStyle = "#0e0e0e"
         this.ctx.font = `${this.#getCompatibleSize(5)}em System`
         this.ctx.fillText("GAME OVER", this.canvas.width * 0.2, this.canvas.height * 0.2)
-        this.life <= 0 ?
-            this.ctx.fillText("YOU  LOSE", this.canvas.width * 0.2, this.canvas.height * 0.4) :
-            this.ctx.fillText(" YOU WIN ", this.canvas.width * 0.2, this.canvas.height * 0.4);
+        if (this.life <= 0) {
+            this.ctx.fillText("YOU  LOSE", this.canvas.width * 0.2, this.canvas.height * 0.4)
+            return
+        }
+        this.ctx.fillText(" YOU WIN ", this.canvas.width * 0.2, this.canvas.height * 0.4);
+        audio.Win.Play()
     }
 
     #showControlMenu() {
