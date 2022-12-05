@@ -1,5 +1,7 @@
 *.exe
 .idea/
 temp/
-docs/*
-!docs/index.html
+docs/**/*.min.js
+docs/**/*.js
+docs/**/*.mjs
+docs/rollup.config.js
