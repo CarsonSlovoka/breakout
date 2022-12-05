@@ -10,7 +10,8 @@
 </body>
 
 <script type="module">
-  import * as app from "./app"
+  // import * as app from "./app" // gh-pages沒辦法這樣建立
+  import * as app from "./app/index.mjs"
 
   const game = new app.GameBreakout(
     document.querySelector("canvas"),
