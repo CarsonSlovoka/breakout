@@ -6,7 +6,7 @@
 // npm install uglify-js -g // 安裝uglifyjs
 // npm list -g uglify-js
 
-const version = "0.0.0"
+const version = "1.0.0"
 
 export default {
   input: '../docs/app/index.mjs',
