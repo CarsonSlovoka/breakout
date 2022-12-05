@@ -67,28 +67,15 @@ abstract class ColorAble extends Meta {
 }
 
 class Tray extends ColorAble {
-    x: number
-    y: number
-    width: number
-    height: number
-
-    // 托盤橫向移動的單位距離
-    dx: number
-
     moveDirection: Direction
 
     constructor(
-        x: number, y: number,
-        width: number, height: number,
-        dx: number,
+        public x: number, public y: number,
+        public width: number, public height: number,
+        public dx: number, // 托盤橫向移動的單位距離
         fillStyle: string, strokeColor: string,
     ) {
         super(fillStyle, strokeColor)
-        this.x = x
-        this.y = y
-        this.dx = dx
-        this.width = width
-        this.height = height
         this.moveDirection = Direction.Null
     }
 
@@ -131,16 +118,12 @@ class Ball extends ColorAble {
 }
 
 class Brick extends ColorAble {
-    x: number
-    y: number
     isAlive: boolean // alive or broken
     constructor(
-        x: number, y: number,
+        public x: number, public y: number,
         fillStyle: string, strokeColor: string
     ) {
         super(fillStyle, strokeColor)
-        this.x = x
-        this.y = y
         this.isAlive = true
     }
 
@@ -150,19 +133,11 @@ class Brick extends ColorAble {
 }
 
 class Toggle extends Meta {
-    x: number
-    y: number
-    width: number
-    height: number
-    private value: boolean
-
-    constructor(x: number, y: number, width: number, height: number, defaultValue: boolean) {
+    constructor(
+        public x: number, public y: number,
+        public width: number, public height: number,
+        private value: boolean) {
         super()
-        this.x = x
-        this.y = y
-        this.width = width
-        this.height = height
-        this.value = defaultValue
     }
 
     InitEventListener(): string {
