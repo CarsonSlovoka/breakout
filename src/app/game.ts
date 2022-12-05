@@ -132,6 +132,18 @@ class Brick extends ColorAble {
     }
 }
 
+class TextButton {
+    constructor(public text: string,
+                public x: number, public y: number,
+                public width: number, public height: number,
+    ) {
+    }
+
+    InitEventListener(): string {
+        return "TextButton"
+    }
+}
+
 class Toggle extends Meta {
     constructor(
         public x: number, public y: number,
@@ -160,6 +172,7 @@ export class GameBreakout extends Game {
     protected bricks: Brick[][]
 
     protected toggleMuted: Toggle
+    protected tryAgainButton: TextButton
 
     life: number
     level: number
@@ -244,6 +257,18 @@ export class GameBreakout extends Game {
             audio.LifeLost.muted = isMuted
             audio.Win.muted = isMuted
         })
+
+        // Init trayAgainButton
+        {
+            this.ctx.font = `${this.#getCompatibleSize(2)}em System`
+            const text = "Try Again"
+            const textMetric = this.ctx.measureText(text)
+            this.tryAgainButton = new TextButton(text, this.canvas.width * 0.2, this.canvas.height * 0.6,
+                textMetric.width,
+                textMetric.fontBoundingBoxAscent + textMetric.fontBoundingBoxDescent,
+            )
+        }
+
 
         // Init Tray
         const trayMarginBottom = this.cfg.TrayHeight * 3 // 太高沒有什麼意義，反正掉下去就是死掉
@@ -555,10 +580,11 @@ export class GameBreakout extends Game {
         this.ctx.fillText("GAME OVER", this.canvas.width * 0.2, this.canvas.height * 0.2)
         if (this.life <= 0) {
             this.ctx.fillText("YOU  LOSE", this.canvas.width * 0.2, this.canvas.height * 0.4)
-            return
+        } else {
+            this.ctx.fillText(" YOU WIN ", this.canvas.width * 0.2, this.canvas.height * 0.4)
+            audio.Win.Play()
         }
-        this.ctx.fillText(" YOU WIN ", this.canvas.width * 0.2, this.canvas.height * 0.4);
-        audio.Win.Play()
+        this.ctx.fillText(this.tryAgainButton.text, this.tryAgainButton.x, this.tryAgainButton.y)
     }
 
     #showControlMenu() {
@@ -612,12 +638,27 @@ export class GameBreakout extends Game {
             this.canvas.addEventListener("click", (e) => {
                 const x = e.clientX - this.canvas.offsetLeft
                 const y = e.clientY - this.canvas.offsetTop
+
+                // muted
                 if (this.toggleMuted.x <= x && x <= this.toggleMuted.x + this.toggleMuted.x + this.toggleMuted.width &&
                     this.toggleMuted.y <= y && y <= this.toggleMuted.y + this.toggleMuted.y + this.toggleMuted.height
                 ) {
                     this.toggleMuted.Switch()
                     this.toggleMuted.DispatchEvent("change")
-                    this.#drawMusicButton()
+                    if (this.isPause) {
+                        this.#drawMusicButton()
+                    }
+                    return
+                }
+
+                // try again
+                if (this.isGameOver) {
+                    if (this.tryAgainButton.x <= x && x <= this.tryAgainButton.x + this.tryAgainButton.x + this.tryAgainButton.width &&
+                        this.tryAgainButton.y <= y && y <= this.tryAgainButton.y + this.tryAgainButton.y + this.tryAgainButton.height
+                    ) {
+                        location.reload()
+                        return
+                    }
                 }
             })
 
@@ -644,6 +685,9 @@ export class GameBreakout extends Game {
                     this.isPause = false
                     break
                 case "Escape":
+                    if (this.isGameOver) {
+                        return
+                    }
                     this.isPause = true
                     this.#showControlMenu()
             }
