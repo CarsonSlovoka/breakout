@@ -32,10 +32,10 @@ class SafeAudio extends Audio {
     }
 }
 
-(async () => {
+export async function InitAudio(): Promise<void> {
     WallHit = await SafeAudio.New("./static/audio/wall_hit.mp3")
     BrickHit = await SafeAudio.New("./static/audio/brick_hit.mp3")
     TrayHit = await SafeAudio.New("./static/audio/tray_hit.mp3")
     LifeLost = await SafeAudio.New("./static/audio/life_lost.mp3")
     Win = await SafeAudio.New("./static/audio/win.mp3")
-})()
+}

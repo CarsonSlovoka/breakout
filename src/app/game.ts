@@ -188,7 +188,6 @@ export class GameBreakout extends Game {
         super(canvas, FPS)
 
         this.level = 1
-        this.#initImage()
 
         const trayWidth = this.canvas.width * 0.1
         const trayHeight = this.canvas.height * 0.06
@@ -371,10 +370,6 @@ export class GameBreakout extends Game {
 
         this.isPause = true
         this.#showControlMenu()
-    }
-
-    #initImage() {
-        this.canvas.style.backgroundImage = img.BG.style.backgroundImage // "linear-gradient(6deg, #0ff .02%, rgb(0 157 245 / 20%) 99.98%)"
     }
 
     #createBricks(numRow: number, numCol: number): Brick[][] {
@@ -621,6 +616,11 @@ export class GameBreakout extends Game {
     }
 
     Start() {
-        this.Loop(0)
+        img.InitImage()
+            .then(() => {
+                this.canvas.style.backgroundImage = img.BG.style.backgroundImage // "linear-gradient(6deg, #0ff .02%, rgb(0 157 245 / 20%) 99.98%)"
+                audio.InitAudio()
+            })
+            .then(() => this.Loop(0))
     }
 }
