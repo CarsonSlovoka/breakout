@@ -149,11 +149,42 @@ class Brick extends ColorAble {
     }
 }
 
+class Toggle extends Meta {
+    x: number
+    y: number
+    width: number
+    height: number
+    private value: boolean
+
+    constructor(x: number, y: number, width: number, height: number, defaultValue: boolean) {
+        super()
+        this.x = x
+        this.y = y
+        this.width = width
+        this.height = height
+        this.value = defaultValue
+    }
+
+    InitEventListener(): string {
+        return "canvasButton"
+    }
+
+    Switch() {
+        this.value = !this.value
+    }
+
+    get Value(): boolean {
+        return this.value
+    }
+}
+
 export class GameBreakout extends Game {
     readonly cfg: config
     protected tray: Tray
     protected ball: Ball
     protected bricks: Brick[][]
+
+    protected toggleMuted: Toggle
 
     life: number
     level: number
@@ -225,6 +256,19 @@ export class GameBreakout extends Game {
 
         this.mouse = {x: 0, y: 0}
         this.initControl()
+
+        // Init ToggleMuted
+        this.toggleMuted = new Toggle(this.canvas.width * 0.1, this.canvas.height * 0.9,
+            this.#getCompatibleSize(20), this.#getCompatibleSize(20),
+            false)
+        this.toggleMuted.AddEventListener("change", () => {
+            const isMuted = this.toggleMuted.Value
+            audio.WallHit.muted = isMuted
+            audio.BrickHit.muted = isMuted
+            audio.TrayHit.muted = isMuted
+            audio.LifeLost.muted = isMuted
+            audio.Win.muted = isMuted
+        })
 
         // Init Tray
         const trayMarginBottom = this.cfg.TrayHeight * 3 // 太高沒有什麼意義，反正掉下去就是死掉
@@ -369,7 +413,6 @@ export class GameBreakout extends Game {
         }
 
         this.isPause = true
-        this.#showControlMenu()
     }
 
     #createBricks(numRow: number, numCol: number): Brick[][] {
@@ -453,10 +496,10 @@ export class GameBreakout extends Game {
 
     #getCompatibleSize(defaultSize: number): number {
         // https://stackoverflow.com/a/22948632/9935654
-        const defaultWidth = 1000
-        const defaultHeight = 800
-        const ratio = this.canvas.width * this.canvas.height / (defaultWidth * defaultHeight)
-        return defaultSize * ratio
+        const defaultWidth = 520
+        const defaultHeight = 840
+        // size = defaultSize * sqrt(scaleX**2 + scaleY**2)
+        return defaultSize * Math.sqrt((this.canvas.width / defaultWidth) ** 2 + (this.canvas.height / defaultHeight) ** 2)
     }
 
     #drawStats() {
@@ -470,15 +513,21 @@ export class GameBreakout extends Game {
         this.ctx.fillStyle = "#1fa7ff"
         this.ctx.font = `${fontSize}em System`
         this.ctx.drawImage(img.Score, this.canvas.width * 0.1, marginTop, iconSize, iconSize)
-        this.ctx.fillText(`${this.score}`, this.canvas.width * 0.16, marginTop)
+        this.ctx.fillText(`${this.score}`, this.canvas.width * 0.24, marginTop)
 
         // put center
-        this.ctx.drawImage(img.Life, this.canvas.width * 0.44, marginTop, iconSize, iconSize)
-        this.ctx.fillText(`${this.life}`, this.canvas.width * 0.50, marginTop)
+        this.ctx.drawImage(img.Life, this.canvas.width * 0.46, marginTop, iconSize, iconSize)
+        this.ctx.fillText(`${this.life}`, this.canvas.width * 0.60, marginTop)
 
         // put right
-        this.ctx.drawImage(img.Level, this.canvas.width * 0.80, marginTop, iconSize, iconSize)
-        this.ctx.fillText(`1`, this.canvas.width * 0.86, marginTop)
+        this.ctx.drawImage(img.Level, this.canvas.width * 0.74, marginTop, iconSize, iconSize)
+        this.ctx.fillText(`1`, this.canvas.width * 0.88, marginTop)
+    }
+
+    #drawMusicButton() {
+        this.ctx.drawImage(this.toggleMuted.Value ? img.Muted : img.Music,
+            this.toggleMuted.x, this.toggleMuted.y,
+            this.toggleMuted.width, this.toggleMuted.height)
     }
 
     // 畫出物件
@@ -490,6 +539,7 @@ export class GameBreakout extends Game {
         this.#drawBall()
         this.#drawBricks()
         this.#drawStats()
+        this.#drawMusicButton()
         this.#drawMouse()
     }
 
@@ -526,7 +576,7 @@ export class GameBreakout extends Game {
         this.isGameOver = true
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
         this.ctx.fillStyle = "#0e0e0e"
-        this.ctx.font = `${this.#getCompatibleSize(5)}em System`
+        this.ctx.font = `${this.#getCompatibleSize(2)}em System`
         this.ctx.fillText("GAME OVER", this.canvas.width * 0.2, this.canvas.height * 0.2)
         if (this.life <= 0) {
             this.ctx.fillText("YOU  LOSE", this.canvas.width * 0.2, this.canvas.height * 0.4)
@@ -542,6 +592,7 @@ export class GameBreakout extends Game {
         this.ctx.font = `${this.#getCompatibleSize(2)}em System`
         this.ctx.fillText("Escape: Pause", this.canvas.width * 0.2, this.canvas.height * 0.2)
         this.ctx.fillText("Move: ← →", this.canvas.width * 0.2, this.canvas.height * 0.4)
+        this.#drawMusicButton()
     }
 
     // 物件邏輯判斷部分
@@ -583,6 +634,18 @@ export class GameBreakout extends Game {
                 this.mouse.y = e.clientY - this.canvas.offsetTop
             })
 
+            this.canvas.addEventListener("click", (e) => {
+                const x = e.clientX - this.canvas.offsetLeft
+                const y = e.clientY - this.canvas.offsetTop
+                if (this.toggleMuted.x <= x && x <= this.toggleMuted.x + this.toggleMuted.x + this.toggleMuted.width &&
+                    this.toggleMuted.y <= y && y <= this.toggleMuted.y + this.toggleMuted.y + this.toggleMuted.height
+                ) {
+                    this.toggleMuted.Switch()
+                    this.toggleMuted.DispatchEvent("change")
+                    this.#drawMusicButton()
+                }
+            })
+
             this.canvas.addEventListener("mouseleave", () => {
                 this.mouse.x = 0
                 this.mouse.y = 0
@@ -617,10 +680,13 @@ export class GameBreakout extends Game {
 
     Start() {
         img.InitImage()
-            .then(() => {
+            .then(async () => {
                 this.canvas.style.backgroundImage = img.BG.style.backgroundImage // "linear-gradient(6deg, #0ff .02%, rgb(0 157 245 / 20%) 99.98%)"
-                audio.InitAudio()
+                await audio.InitAudio()
             })
-            .then(() => this.Loop(0))
+            .then(() => {
+                this.#showControlMenu()
+                this.Loop(0)
+            })
     }
 }
