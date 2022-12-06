@@ -6,7 +6,31 @@
 </head>
 
 <body>
-<canvas></canvas>
+<canvas></canvas><br>
+<button onclick="(()=>{
+  window.game.ball.speed +=1
+  console.log(`ball.speed: ${window.game.ball.speed}`)
+}
+  )()
+">⚡speed+=1
+</button>
+
+<button onclick="(()=>{
+  window.game.ball.speed -=1
+  console.log(`ball.speed: ${window.game.ball.speed}`)
+}
+  )()
+">🐌speed-=1
+</button><br>
+
+<button onclick="window.game.life +=5">❤️Add +5 Life</button><br>
+<pre>
+    You can open the console panel for cheating.😆
+
+    window.game.life=5
+    window.game.ball.speed = 6
+    window.game.cfg.BallDy = -30
+  </pre>
 </body>
 
 <script type="module">
@@ -20,5 +44,7 @@
       ballSpeed: 6
     })
   game.Start()
+  window.game = game // set dummy attribute for window
+
 </script>
 </html>

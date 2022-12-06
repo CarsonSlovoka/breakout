@@ -6,12 +6,17 @@
 </head>
 
 <body>
-<canvas></canvas>
+<canvas></canvas><br>
+<button onclick="window.game.life +=5">Add +5 Life</button>
+<br>
 </body>
 
 <script type="module">
+  // import * as app from "./app" // gh-pages沒辦法這樣建立
   import * as app from "./app/game.min.js"
+
   const game = new app.GameBreakout(document.querySelector("canvas"), {})
   game.Start()
+  window.game = game // set dummy attribute for window
 </script>
 </html>

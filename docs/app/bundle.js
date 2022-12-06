@@ -323,7 +323,8 @@ class GameBreakout extends Game {
                 ball.x = this.tray.x + this.tray.width / 2; // 死掉的球，從托盤中間開始發球
                 ball.y = this.tray.y - ball.radius;
                 ball.dx = this.cfg.BallDx * (Math.random() * 2 - 1);
-                ball.dy = defaultBallDy;
+                // ball.dy = defaultBallDy // 這樣沒辦法直接從外部作弊
+                ball.dy = this.cfg.BallDy; // 可以從外部修改cfg來影響預設的dy速度
             });
             ball.AddEventListener("checkWallCollision", (e) => {
                 e.stopImmediatePropagation();
